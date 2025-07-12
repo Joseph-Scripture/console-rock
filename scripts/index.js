@@ -1,28 +1,22 @@
-// console.log('hellow')
-let playerScore = 0;
-let computerScore = 0;
+// --- SETUP ---
+const containerDiv = document.querySelector('.container');
+const resultDiv = document.createElement('div');
+const allButtons = document.querySelectorAll('button');
 
-// Plays 5 rounds of the game
-for (let i = 0; i < 5; i++) {
-    const humanSelection = getHumanChoice();
-    const computerSelection = getComputerMove();
-    playRound(humanSelection, computerSelection);
-    console.log(`Score: Player ${playerScore}, Computer ${computerScore}`);
-    console.log('---------------------');
-}
+let score = {
+    playerScore: 0,
+    computerScore: 0,
+};
 
-// After 5 rounds, declare a final winner
-console.log(' GAME OVER ');
-if (playerScore > computerScore) {
-    console.log(`Your final score is ${playerScore}. You win the game!`);
-} else if (computerScore > playerScore) {
-    console.log(`Computer wins with a final score of ${computerScore}.`);
-} else {
-    console.log(`It's a tie with a final score of ${playerScore} to ${computerScore}.`);
-}
+// Create display elements once and store them
+const scoreParagraph = document.createElement('p');
+const computerScoreDisplay = document.createElement('p');
+const finalMessage = document.createElement('h2'); // For the final winner message
 
+resultDiv.style.marginTop = '60px';
+containerDiv.append(resultDiv);
 
-// --- FUNCTIONS ---
+// --- GAME LOGIC ---
 
 function getComputerMove() {
     const value = Math.floor(Math.random() * 3);
@@ -35,34 +29,92 @@ function getComputerMove() {
     }
 }
 
-function getHumanChoice() {
-    let humanMove = prompt('Enter Your Move: (rock, paper, or scissors)');
-    // Basic validation to ensure the input is one of the three options
-    while (humanMove === null || !['rock', 'paper', 'scissors'].includes(humanMove.trim().toLowerCase())) {
-        alert('Invalid input! Please enter rock, paper, or scissors.');
-        humanMove = prompt('Enter Your Move: (rock, paper, or scissors)');
-    }
-    return humanMove.trim().toLowerCase();
+function updateScoreDisplay() {
+    scoreParagraph.textContent = `Player Score: ${score.playerScore}`;
+    computerScoreDisplay.textContent = `Computer Score: ${score.computerScore}`;
 }
 
-function playRound(humanSelection, computerSelection) {
-    console.log(`You chose: ${humanSelection}`);
-    console.log(`Computer chose: ${computerSelection}`);
+function endGame() {
+    // Determine winner and set final message
+    if (score.playerScore > score.computerScore) {
+        finalMessage.textContent = 'Congratulations! You won the game!';
+        finalMessage.style.color = 'green';
+    } else {
+        finalMessage.textContent = 'Game Over. The computer won.';
+        finalMessage.style.color = 'red';
+    }
+    resultDiv.append(finalMessage);
+
+    // Disable game buttons
+    allButtons.forEach(button => {
+        button.disabled = true;
+    });
+
+    // Add a "Play Again" button
+    const playAgainButton = document.createElement('button');
+    playAgainButton.textContent = 'Play Again';
+    playAgainButton.style.marginTop = '20px';
+    containerDiv.append(playAgainButton);
+
+    playAgainButton.addEventListener('click', () => {
+        resetGame(playAgainButton);
+    });
+}
+
+function resetGame(buttonToRemove) {
+    // Reset scores
+    score.playerScore = 0;
+    score.computerScore = 0;
+
+    // Clear all messages
+    resultDiv.innerHTML = '';
+    finalMessage.textContent = '';
+
+
+    // Re-enable game buttons
+    allButtons.forEach(button => {
+        button.disabled = false;
+    });
+
+    // Remove the "Play Again" button
+    containerDiv.removeChild(buttonToRemove);
+}
+
+function playRound(humanSelection) {
+    resultDiv.innerHTML = ''; // Clear previous round results
+    const computerSelection = getComputerMove();
+
+    const roundMessage = document.createElement('p');
 
     if (humanSelection === computerSelection) {
-        console.log('It\'s a tie! No points awarded.');
-        return; // Exit the function early
-    }
-
-    if (
+        roundMessage.textContent = 'It\'s a tie this round!';
+    } else if (
         (humanSelection === 'rock' && computerSelection === 'scissors') ||
         (humanSelection === 'paper' && computerSelection === 'rock') ||
         (humanSelection === 'scissors' && computerSelection === 'paper')
     ) {
-        console.log(`You win this round! ${humanSelection} beats ${computerSelection}.`);
-        playerScore++;
+        roundMessage.textContent = `You win! ${humanSelection} beats ${computerSelection}.`;
+        score.playerScore++;
     } else {
-        console.log(`You lose this round! ${computerSelection} beats ${humanSelection}.`);
-        computerScore++;
+        roundMessage.textContent = `You lose. ${computerSelection} beats ${humanSelection}.`;
+        score.computerScore++;
+    }
+
+    resultDiv.append(roundMessage);
+    updateScoreDisplay(); // Update score text after every round
+    resultDiv.append(scoreParagraph);
+    resultDiv.append(computerScoreDisplay);
+
+    // Check for a winner
+    if (score.playerScore === 5 || score.computerScore === 5) {
+        endGame();
     }
 }
+
+// --- INITIALIZE GAME ---
+
+allButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        playRound(button.textContent.toLowerCase());
+    });
+});
